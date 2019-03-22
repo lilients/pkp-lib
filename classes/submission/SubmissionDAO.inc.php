@@ -164,6 +164,37 @@ abstract class SubmissionDAO extends DAO implements PKPPubIdPluginDAO, ISubmissi
 		return $submissionVersions;
 	}
 
+	/**
+	 * Get all published revisions for a submission
+	 * @param $submissionId int
+	 * @param $contextId int optional
+	 * $param $order string optional default: ASC
+	 * @return array
+	 */
+	function getPublishedSubmissionVersionsById($submissionId, $order = SORT_DIRECTION_ASC) {
+		$params = array((int) $submissionId);
+
+		$sql = 'SELECT DISTINCT ss.submission_version
+						FROM published_submissions ps
+							JOIN submission_settings ss ON ss.submission_id = ps.submission_id AND ss.submission_version = ps.published_submission_version
+						WHERE 	ss.submission_id = ?
+						ORDER BY ss.submission_version ' . $this->getDirectionMapping($order);
+
+		$result = $this->retrieve($sql, $params);
+
+		$submissionVersions = array();
+		while(!$result->EOF){
+			$row = $result->getRowAssoc(false);
+			$submissionVersions[] = $row['submission_version'];
+			$result->moveNext();
+		}
+
+		$result->close();
+
+		return $submissionVersions;
+	}
+
+
 	function getCurrentPublishedSubmissionVersion($submissionId) {
 		$params = array((int) $submissionId);
 
